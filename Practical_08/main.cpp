@@ -1,39 +1,44 @@
 #include <iostream>
+#include <memory>
 #include <string>
 
-// Function Template to find maximum of two values
-template <typename T>
-T findMax(T a, T b) {
-    return (a > b) ? a : b;
-}
-
-// Class Template for a Generic Key-Value Pair
-template <typename T1, typename T2>
-class KeyValuePair {
-private:
-    T1 key;
-    T2 value;
-
+// Abstract Product
+class Vehicle {
 public:
-    KeyValuePair(T1 k, T2 v) : key(k), value(v) {}
+    virtual void drive() const = 0;
+    virtual ~Vehicle() {}
+};
 
-    void display() const {
-        std::cout << "Key: " << key << " | Value: " << value << "\n";
+class Car : public Vehicle {
+public:
+    void drive() const override {
+        std::cout << "Driving a 4-wheeler Car.\n";
+    }
+};
+
+class Bike : public Vehicle {
+public:
+    void drive() const override {
+        std::cout << "Riding a 2-wheeler Bike.\n";
+    }
+};
+
+// Factory Class
+class VehicleFactory {
+public:
+    static std::unique_ptr<Vehicle> createVehicle(const std::string& type) {
+        if (type == "car") return std::make_unique<Car>();
+        if (type == "bike") return std::make_unique<Bike>();
+        return nullptr;
     }
 };
 
 int main() {
-    std::cout << "--- Function Template Demo ---\n";
-    std::cout << "Max of 15 and 27: " << findMax(15, 27) << "\n";
-    std::cout << "Max of 8.45 and 3.92: " << findMax(8.45, 3.92) << "\n";
-    std::cout << "Max of 'A' and 'Z': " << findMax('A', 'Z') << "\n";
+    auto v1 = VehicleFactory::createVehicle("car");
+    auto v2 = VehicleFactory::createVehicle("bike");
 
-    std::cout << "\n--- Class Template Demo ---\n";
-    KeyValuePair<int, std::string> student(112, "Pranav");
-    KeyValuePair<std::string, double> course("OOP C++", 9.5);
-
-    student.display();
-    course.display();
+    if (v1) v1->drive();
+    if (v2) v2->drive();
 
     return 0;
 }

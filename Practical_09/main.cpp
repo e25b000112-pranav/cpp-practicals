@@ -1,49 +1,63 @@
 #include <iostream>
-#include <stdexcept>
+#include <vector>
 #include <string>
+#include <stdexcept>
 
-// Custom Exception Class
-class InvalidAgeException : public std::exception {
+template <typename T>
+class GenericStack {
 private:
-    std::string message;
+    std::vector<T> elements;
 
 public:
-    InvalidAgeException(std::string msg) : message(msg) {}
+    void push(const T& item) {
+        elements.push_back(item);
+    }
 
-    const char* what() const noexcept override {
-        return message.c_str();
+    void pop() {
+        if (isEmpty()) {
+            throw std::out_of_range("Stack Underflow: Cannot pop from an empty stack!");
+        }
+        elements.pop_back();
+    }
+
+    T top() const {
+        if (isEmpty()) {
+            throw std::out_of_range("Stack is empty!");
+        }
+        return elements.back();
+    }
+
+    bool isEmpty() const {
+        return elements.empty();
     }
 };
 
-double divide(double numerator, double denominator) {
-    if (denominator == 0) {
-        throw std::runtime_error("Division by zero is not allowed!");
-    }
-    return numerator / denominator;
-}
-
-void registerVoter(int age) {
-    if (age < 18) {
-        throw InvalidAgeException("Registration failed: Age must be 18 or older.");
-    }
-    std::cout << "Voter registered successfully (Age: " << age << ").\n";
-}
-
 int main() {
-    std::cout << "--- Standard Exception Demo ---\n";
-    try {
-        std::cout << "10 / 2 = " << divide(10, 2) << "\n";
-        std::cout << "10 / 0 = " << divide(10, 0) << "\n";
-    } catch (const std::runtime_error& e) {
-        std::cout << "Caught Standard Exception: " << e.what() << "\n";
-    }
+    // 1. int Stack
+    GenericStack<int> intStack;
+    intStack.push(10);
+    intStack.push(20);
+    std::cout << "Int Stack Top: " << intStack.top() << "\n";
+    intStack.pop();
 
-    std::cout << "\n--- Custom Exception Demo ---\n";
+    // 2. float Stack
+    GenericStack<float> floatStack;
+    floatStack.push(3.14f);
+    floatStack.push(9.81f);
+    std::cout << "Float Stack Top: " << floatStack.top() << "\n";
+
+    // 3. std::string Stack
+    GenericStack<std::string> strStack;
+    strStack.push("C++");
+    strStack.push("Templates");
+    std::cout << "String Stack Top: " << strStack.top() << "\n";
+
+    // 4. Empty Stack Exception Test
     try {
-        registerVoter(20);
-        registerVoter(16);
-    } catch (const InvalidAgeException& e) {
-        std::cout << "Caught Custom Exception: " << e.what() << "\n";
+        intStack.pop();
+        intStack.pop(); // Triggers underflow
+    } catch (const std::exception& e) {
+        std::cout << "Error Caught: " << e.what() << "\n";
     }
 
     return 0;

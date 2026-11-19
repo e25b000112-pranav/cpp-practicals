@@ -1,54 +1,77 @@
 #include <iostream>
 #include <fstream>
-#include <stdexcept>
+#include <vector>
 #include <string>
+#include <stdexcept>
 
-class Account {
-private:
-    std::string owner;
-    double balance;
+class Book {
+public:
+    int id;
+    std::string title;
+    std::string author;
+    bool isIssued;
 
-    void logTransaction(const std::string& message) {
-        std::ofstream logFile("transactions.log", std::ios::app);
-        if (logFile.is_open()) {
-            logFile << owner << ": " << message << " | Balance: Rs." << balance << "\n";
-            logFile.close();
-        }
+    Book(int i, std::string t, std::string a, bool issued = false)
+        : id(i), title(t), author(a), isIssued(issued) {}
+
+    void display() const {
+        std::cout << "ID: " << id << " | Title: " << title
+                  << " | Author: " << author
+                  << " | Status: " << (isIssued ? "Issued" : "Available") << "\n";
     }
+};
+
+class Library {
+private:
+    std::vector<Book> books;
+    const std::string filename = "library_books.csv";
 
 public:
-    Account(std::string name, double initialBalance) : owner(name), balance(initialBalance) {
-        logTransaction("Account opened");
+    void addBook(int id, std::string title, std::string author) {
+        books.push_back(Book(id, title, author, false));
+        saveToFile();
+        std::cout << "Book added: " << title << "\n";
     }
 
-    void deposit(double amount) {
-        if (amount <= 0) {
-            throw std::invalid_argument("Deposit amount must be positive!");
-        }
-        balance += amount;
-        logTransaction("Deposited Rs." + std::to_string(amount));
-        std::cout << "Deposited Rs." << amount << " | New Balance: Rs." << balance << "\n";
+    void listBooks() const {
+        std::cout << "\n--- Library Catalog ---\n";
+        for (const auto& b : books) b.display();
     }
 
-    void withdraw(double amount) {
-        if (amount > balance) {
-            throw std::runtime_error("Insufficient balance for withdrawal!");
+    void issueBook(int id) {
+        for (auto& b : books) {
+            if (b.id == id) {
+                if (b.isIssued) throw std::runtime_error("Book is already issued!");
+                b.isIssued = true;
+                saveToFile();
+                std::cout << "Book ID " << id << " issued successfully.\n";
+                return;
+            }
         }
-        balance -= amount;
-        logTransaction("Withdrew Rs." + std::to_string(amount));
-        std::cout << "Withdrew Rs." << amount << " | New Balance: Rs." << balance << "\n";
+        throw std::invalid_argument("Book ID not found!");
+    }
+
+    void saveToFile() const {
+        std::ofstream out(filename);
+        for (const auto& b : books) {
+            out << b.id << "," << b.title << "," << b.author << "," << b.isIssued << "\n";
+        }
     }
 };
 
 int main() {
+    Library lib;
+    lib.addBook(1, "Clean Code", "Robert Martin");
+    lib.addBook(2, "Effective C++", "Scott Meyers");
+    lib.listBooks();
+
     try {
-        Account acc("Pranav", 5000.0);
-        acc.deposit(2000.0);
-        acc.withdraw(1500.0);
-        acc.withdraw(10000.0);
+        lib.issueBook(1);
+        lib.issueBook(1); // Triggers already-issued error
     } catch (const std::exception& e) {
-        std::cout << "Transaction Error: " << e.what() << "\n";
+        std::cout << "Error: " << e.what() << "\n";
     }
 
+    lib.listBooks();
     return 0;
 }
